@@ -1,91 +1,35 @@
-# app.py
+from flask import Flask, render_template, request, redirect, url_for
 import os
-from flask import Flask, request, jsonify, g
-from flask_cors import CORS
-import mysql.connector
 
 app = Flask(__name__)
-CORS(app)
 
-def get_db():
-    if 'db' not in g:
-        db_config = {
-            'host': os.environ.get('DB_HOST', 'localhost'),
-            'user': os.environ.get('DB_USER', 'root'),
-            'password': os.environ.get('DB_PASSWORD', ''),
-            'database': os.environ.get('DB_NAME', 'pharmadb'),
-            'port': int(os.environ.get('DB_PORT', 3306))
-        }
-        g.db = mysql.connector.connect(**db_config)
-    return g.db
-
-@app.teardown_appcontext
-def close_db(exc):
-    db = g.pop('db', None)
-    if db is not None:
-        try:
-            db.close()
-        except Exception:
-            pass
-
-@app.route('/')
+# Home route → show index.html
+@app.route("/")
 def home():
-    return "✅ PharmaSafe API (deployed)"
+    return render_template("index.html")
 
-# Search endpoint: requires JSON { "user_id": 1, "medicine": "Paracetamol" }
-@app.route('/search', methods=['POST'])
-def search_medicine():
-    data = request.get_json(force=True)
-    user_id = data.get('user_id')
-    medicine_name = data.get('medicine')
-    if not (user_id and medicine_name):
-        return jsonify({'error': 'user_id and medicine required'}), 400
+# Handle form submission
+@app.route("/submit", methods=["POST"])
+def submit():
+    medicine_name = request.form.get("medicine_name")
+    language = request.form.get("language")
 
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
+    # If user uploaded a file, save it
+    file = request.files.get("file")
+    file_path = None
+    if file and file.filename != "":
+        upload_folder = os.path.join("uploads")
+        os.makedirs(upload_folder, exist_ok=True)
+        file_path = os.path.join(upload_folder, file.filename)
+        file.save(file_path)
 
-    # Find medicine
-    cursor.execute("SELECT * FROM medicines WHERE name = %s LIMIT 1", (medicine_name,))
-    med = cursor.fetchone()
-    if not med:
-        cursor.close()
-        return jsonify({"message": "Medicine not found"}), 404
-
-    # Store search history
-    cursor.execute(
-        "INSERT INTO search_history (user_id, medicine_id) VALUES (%s, %s)",
-        (user_id, med['id'])
+    # Just send data to results.html for now
+    return render_template(
+        "results.html",
+        medicine_name=medicine_name,
+        language=language,
+        file_path=file_path
     )
-    db.commit()
-    cursor.close()
-
-    return jsonify({
-        "user_id": user_id,
-        "medicine": med['name'],
-        "details": {
-            "description": med.get('description'),
-            "side_effects": med.get('side_effects')
-        }
-    })
-
-# Optional: user history
-@app.route('/history/<int:user_id>', methods=['GET'])
-def get_history(user_id):
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT sh.id, u.name AS user, m.name AS medicine, m.description, sh.searched_at
-        FROM search_history sh
-        JOIN users u ON sh.user_id = u.id
-        JOIN medicines m ON sh.medicine_id = m.id
-        WHERE sh.user_id = %s
-        ORDER BY sh.searched_at DESC
-    """, (user_id,))
-    rows = cursor.fetchall()
-    cursor.close()
-    return jsonify(rows)
 
 if __name__ == "__main__":
-    # For local testing. In Render use gunicorn (Procfile).
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=5000)
