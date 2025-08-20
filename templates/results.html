@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Result - PharmaSafe Family</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>📊 Results</h1>
+
+      {% if query %}
+        <div class="section"><strong>Query:</strong> {{ query }}</div>
+      {% endif %}
+      {% if language %}
+        <div class="section"><strong>Language:</strong> {{ language }}</div>
+      {% endif %}
+
+      {% if extracted_text %}
+        <div class="section">
+          <p><strong>📄 Extracted / Entered Text:</strong></p>
+          <pre>{{ extracted_text }}</pre>
+        </div>
+      {% endif %}
+
+      {% if wiki_summary %}
+        <div class="section">
+          <p><strong>📖 Summary:</strong></p>
+          <p>{{ wiki_summary }}</p>
+        </div>
+      {% endif %}
+
+      {% if translated_text %}
+        <div class="section">
+          <p><strong>🌍 Translated Summary:</strong></p>
+          <p>{{ translated_text }}</p>
+        </div>
+      {% endif %}
+
+      {% if not (extracted_text or wiki_summary or translated_text) %}
+        <p>No results available yet. Please try again.</p>
+      {% endif %}
+
+      <a href="{{ url_for('index') }}" class="back-btn">⬅ Go Back</a>
+    </div>
+  </div>
+</body>
+</html>

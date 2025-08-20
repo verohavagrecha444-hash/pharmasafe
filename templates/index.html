@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PharmaSafe Family</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page-wrap">
+    <div class="pharmabox">
+      <!-- Small red capsule logo (center) -->
+      <svg class="logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g transform="rotate(-25 32 32)">
+          <rect x="18" y="18" width="14" height="28" rx="7" fill="#e11d48"/>
+          <rect x="32" y="18" width="14" height="28" rx="7" fill="#fff"/>
+        </g>
+      </svg>
+
+      <h1 class="title">PharmaSafe Family</h1>
+
+      <form action="{{ url_for('submit') }}" method="POST" enctype="multipart/form-data" novalidate>
+        <label class="form-label">Upload Medicine Image (Scanner)</label>
+        <!-- one input used for both file & camera -->
+        <input id="fileInput" type="file" name="file" accept="image/*" capture="environment" />
+
+        <div class="divider">or use camera</div>
+        <button type="button" class="btn btn-camera" id="openCameraBtn">📷 Open Camera</button>
+
+        <div class="divider">or</div>
+
+        <label class="form-label">Enter Medicine Name</label>
+        <input type="text" name="medicine_name" placeholder="e.g., Crocin" />
+
+        <label class="form-label">Select Language</label>
+        <select name="language">
+          <option>English</option>
+          <option>Hindi</option>
+          <option>Gujarati</option>
+          <option>Marathi</option>
+          <option>Bengali</option>
+          <option>Tamil</option>
+        </select>
+
+        <div style="height:12px"></div>
+        <button type="submit" class="btn btn-primary">🔍 Get Info</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Make "Open Camera" just open the same file input (mobile opens camera)
+    document.getElementById('openCameraBtn')
+      .addEventListener('click', () => document.getElementById('fileInput').click());
+  </script>
+</body>
+</html>
